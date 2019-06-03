@@ -1,7 +1,12 @@
-#include <stdio.h>
-int main()
-{
+   #include <stdio.h>
+   #include <mpi.h>
 
-   printf("Hello, World!");
-   return 0;
-}
+   main(int argc, char **argv) 
+   {
+      int ierr;
+
+      ierr = MPI_Init(&argc, &argv);
+      printf("Hello world\n"); 
+         
+      ierr = MPI_Finalize();
+   }
