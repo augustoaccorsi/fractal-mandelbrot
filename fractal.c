@@ -11,7 +11,7 @@
 
 int iteration_to_color(int i, int max);
 int iterations_at_point(double x, double y, int max);
-void compute_image(struct bitmap *bm, double xmin, double xmax, double ymin, double ymax, int max);
+void compute_image(struct bitmap *bm, double xmin, double xmax, double ymin, double ymax, int max, double width_max_divider, double width_min_divider, double height_max_divider, double height_min_divider);
 void *execute_ptreads(int image_width, int image_height 	, double xmin, double xmax, double ymin, double ymax, int max, double xcenter, double ycenter, double scale);
 
 
@@ -140,8 +140,9 @@ Compute an entire fractalbrot image, writing each point to the given bitmap.
 Scale the image to the range (xmin-xmax,ymin-ymax), limiting iterations to "max"
 */
 
-void compute_image(struct bitmap *bm, double xmin, double xmax, double ymin, double ymax, int max)
+void compute_image(struct bitmap *bm, double xmin, double xmax, double ymin, double ymax, int max, double width_max_divider, double width_min_divider, double height_max_divider, double height_min_divider)
 {
+	printf("\n(%f - %f)\n(%f - %f)", xmin, xmax, ymin, ymax);
 	int i, j;
 
 	int width = bitmap_width(bm);
@@ -149,10 +150,10 @@ void compute_image(struct bitmap *bm, double xmin, double xmax, double ymin, dou
 
 	// For every pixel in the image...
 
-	for (j = 0; j < height; j++)
+	for (j = height/2; j < height; j++)
 	{
 
-		for (i = 0; i < width; i++)
+		for (i = width/2; i < width; i++)
 		{
 
 			// Determine the point in x,y space for that pixel.
@@ -210,13 +211,14 @@ int iteration_to_color(int i, int max)
 void *execute_ptreads(int image_width, int image_height, double xmin, double xmax, double ymin, double ymax, int max, double xcenter, double ycenter, double scale)
 {
 	struct bitmap *bm = bitmap_create(image_width, image_height);
-	printf("\n%d\n%d", image_height, image_width);
 
 	// Fill it with a dark blue, for debugging
 	//bitmap_reset(bm, MAKE_RGBA(0, 0, 255, 0));
 
 	// Compute the fractalbrot image
-	compute_image(bm, xcenter - scale, xcenter + scale, ycenter - scale, ycenter + scale, max);
+	
+	//                       xmin               xmax                  ymin               ymax
+	compute_image(bm, (xcenter - scale), (xcenter + scale), (ycenter - scale), (ycenter + scale), max, 0, 0, 0, 0);
 
 	const char *outfile = "fractal.bmp";
 	

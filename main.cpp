@@ -15,12 +15,9 @@
 
 using namespace std;
 
-void set_texture();
-
 typedef struct { unsigned char r, g, b; } rgb_t;
 rgb_t **tex = 0;
 int gwin;
-GLuint texture;
 int width, height;
 int tex_w, tex_h;
 double scale = 1. / 256;
@@ -30,39 +27,6 @@ int saturation = 1;
 int invert = 0;
 int max_iter = 256;
 
-void render()
-{
-	double	x = (double)width / tex_w,
-		y = (double)height / tex_h;
-
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	
-
- 	GLenum error = glGetError();
-
-	glBindTexture(GL_TEXTURE_2D, texture);
-	glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-
-	error = glGetError();
-
-	glBegin(GL_QUADS);
-
-	//glTexCoord2f(0, 0); glVertex2i(0, 0);
-	//glTexCoord2f(x, 0); glVertex2i(width, 0);
-	//glTexCoord2f(x, y); glVertex2i(width, height);
-	//glTexCoord2f(0, y); glVertex2i(0, height);
-
-	glTexCoord2f(0, y); glVertex2i(0, height);
-	glTexCoord2f(x, y); glVertex2i(width, height);
-	glTexCoord2f(x, 0); glVertex2i(width, 0);
-	glTexCoord2f(0, 0); glVertex2i(0, 0);
-
-	glEnd();
-
-	glFlush();
-
-	glutSwapBuffers();
-}
 
 int dump = 1;
 void screen_dump()
@@ -78,39 +42,6 @@ void screen_dump()
 	printf("%s written\n", fn);
 }
 
-void keypress(unsigned char key, int x, int y)
-{
-	switch (key) {
-	case 'q':	glFinish();
-		glutDestroyWindow(gwin);
-		return;
-	case 27:	scale = 1. / 256; cx = -.6; cy = 0; break;
-
-	case 'r':	color_rotate = (color_rotate + 1) % 6;
-		break;
-
-	case '>': case '.':
-		max_iter += 128;
-		if (max_iter > 1 << 15) max_iter = 1 << 15;
-		printf("max iter: %d\n", max_iter);
-		break;
-
-	case '<': case ',':
-		max_iter -= 128;
-		if (max_iter < 128) max_iter = 128;
-		printf("max iter: %d\n", max_iter);
-		break;
-
-	case 'c':	saturation = 1 - saturation;
-		break;
-
-	case 's':	screen_dump(); return;
-	case 'z':	max_iter = 4096; break;
-	case 'x':	max_iter = 128; break;
-	case ' ':	invert = !invert;
-	}
-	set_texture();
-}
 
 void hsv_to_rgb(int hue, int min, int max, rgb_t *p)
 {
@@ -243,51 +174,6 @@ void alloc_tex()
 		tex[i] = tex[i - 1] + tex_w;
 }
 
-void set_texture()
-{
-	alloc_tex();
-	calc_mandel();
-	
-	glBindTexture(GL_TEXTURE_2D, texture);
-
-	GLenum error = glGetError();
-
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
-	error = glGetError();
-
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
-
-	error = glGetError();
-
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, tex_w, tex_h, 0, GL_RGB, GL_UNSIGNED_BYTE, tex[0]);
-
-	error = glGetError();
-
-	render();
-}
-
-void mouseclick(int button, int state, int x, int y)
-{
-	if (state != GLUT_UP) return;
-
-	cx += (x - width / 2) * scale;
-	cy -= (y - height / 2) * scale;
-
-	switch (button) {
-	case GLUT_LEFT_BUTTON: /* zoom in */
-		if (scale > fabs((float)x) * 1e-16 && scale > fabs((float)y) * 1e-16)
-			scale /= 2;
-		break;
-	case GLUT_RIGHT_BUTTON: /* zoom out */
-		scale *= 2;
-		break;
-		/* any other button recenters */
-	}
-	set_texture();
-}
 
 
 void resize(int w, int h)
@@ -296,48 +182,14 @@ void resize(int w, int h)
 	width = w;
 	height = h;
 
-	glViewport(0, 0, w, h);
-	glOrtho(0, w, 0, h, -1, 1);
-
-	set_texture();
 }
 
-void init_gfx(int *c, char **v)
-{
-	glutInit(c, v);
-	glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB);
-
-	glClearColor(0.0, 0.0, 0.0, 1.0); // cor do fundo
-	glClearDepth(1.0);
-
-	width = 1920;
-	height = 1080;
-
-	glutInitWindowSize(width, height);
-
-	std::cout << "Initializing window" << endl;
-
-	gwin = glutCreateWindow("Mandelbrot");
-
-	glutDisplayFunc(render);
-	glutKeyboardFunc(keypress);
-	glutMouseFunc(mouseclick);
-	glutReshapeFunc(resize);
-
-	std::cout << "Initializing texture for Mandelbrot" << endl;
-	glEnable(GL_TEXTURE_2D);
-	glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-	glGenTextures(1, &texture);
-	set_texture();
-}
 
 int main(int c, char **v)
 {
-	init_gfx(&c, v);
 	std::cout << "test!!" << endl;
 	printf("keys:\n\tr: color rotation\n\tc: monochrome\n\ts: screen dump\n\t"
 		"<, >: decrease/increase max iteration\n\tq: quit\n\tmouse buttons to zoom\n");
 
-	glutMainLoop();
 	return 0;
 }
