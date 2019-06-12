@@ -7,12 +7,14 @@
 #include <errno.h>
 #include <string.h>
 #include <pthread.h>
+#include <time.h>
 
 int iteration_to_color(int i, int max);
 int iterations_at_point(double x, double y, int max);
 void *compute_image(void *param_thread);
 void show_help()
-{	printf("-m Número máximo de iterações por ponto (default=1000)\n");
+{
+	printf("-m Número máximo de iterações por ponto (default=1000)\n");
 	printf("-x Coordenada X do centro da imagem (default=0)\n");
 	printf("-x Coordenada y do centro da imagem (default=0)\n");
 	printf("-s Escala da imagem (default=4)\n");
@@ -20,7 +22,7 @@ void show_help()
 	printf("-H Alura da imagem em pixels (default=500)\n");
 	printf("-o Arquivo de saída (default=fractal.bmp)\n");
 	printf("-h Ajuda\n");
-	printf("\nExemplo:\n");	
+	printf("\nExemplo:\n");
 	printf("fractal -x -0.5 -y 0 -s 2 -m 1000 -W 1000 -H 1000 -o fractal.bmp");
 }
 struct bitmap *bm;
@@ -41,6 +43,8 @@ struct param_fractal
 
 int main(int argc, char *argv[])
 {
+	clock_t start, end;
+	start = clock();
 	char c;
 
 	const char *outfile = "fractal.bmp";
@@ -104,7 +108,8 @@ int main(int argc, char *argv[])
 	param2.h_min = 0.5;
 	param2.h_max = 1;
 	param2.w_min = 0.5;
-	param2.w_max = 1;;
+	param2.w_max = 1;
+	;
 	param2.max = max;
 
 	param3.xmin = (xcenter - scale);
@@ -114,7 +119,8 @@ int main(int argc, char *argv[])
 	param3.h_min = 0;
 	param3.h_max = 0.5;
 	param3.w_min = 0;
-	param3.w_max = 0.5;;
+	param3.w_max = 0.5;
+	;
 	param3.max = max;
 
 	param4.xmin = (xcenter - scale);
@@ -124,9 +130,9 @@ int main(int argc, char *argv[])
 	param4.h_min = 0;
 	param4.h_max = 0.5;
 	param4.w_min = 0.5;
-	param4.w_max = 1;;
+	param4.w_max = 1;
+	;
 	param4.max = max;
-
 
 	if (pthread_create(&up_left_thread, NULL, compute_image, &param1))
 	{
@@ -137,7 +143,8 @@ int main(int argc, char *argv[])
 	{
 		printf("Thread 1 up and running\n");
 	}
-	if (pthread_create(&up_right_thread, NULL, compute_image, &param2)){
+	if (pthread_create(&up_right_thread, NULL, compute_image, &param2))
+	{
 		printf("Error creating thread\n");
 		return 1;
 	}
@@ -154,7 +161,7 @@ int main(int argc, char *argv[])
 	{
 		printf("Thread 3 up and running\n");
 	}
-	if (pthread_create(&down_right_thread, NULL,  compute_image, &param4))
+	if (pthread_create(&down_right_thread, NULL, compute_image, &param4))
 	{
 		printf("Error creating thread\n");
 		return 1;
@@ -215,6 +222,10 @@ int main(int argc, char *argv[])
 		printf("Fractal Mandelbrot bitmap created as %s", outfile);
 	}
 
+	end = clock();
+	double cpu_time_used = ((double)(end - start)) / CLOCKS_PER_SEC;
+
+	printf("\nTempo de execucao: %fs", cpu_time_used);
 	return 0;
 }
 
@@ -223,7 +234,7 @@ void *compute_image(void *param_thread)
 	struct param_fractal *param = (struct param_fractal *)param_thread;
 
 	int i, j;
-	
+
 	int width = bitmap_width(bm);
 	int height = bitmap_height(bm);
 
@@ -233,7 +244,7 @@ void *compute_image(void *param_thread)
 	double w_min = param->w_min;
 	double xmax = param->xmax;
 	double xmin = param->xmin;
-	double ymax = param->ymax; 
+	double ymax = param->ymax;
 	double ymin = param->ymin;
 	double max = param->max;
 
@@ -245,7 +256,7 @@ void *compute_image(void *param_thread)
 			double y = ymin + j * (ymax - ymin) / height;
 
 			int iters = iterations_at_point(x, y, max);
-			
+
 			bitmap_set(bm, i, j, iters);
 		}
 	}
