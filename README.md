@@ -2,11 +2,11 @@
 
 ## Processamento de Alto Desempenho (PAD) - Unisinos - Ciência da Computação
 
-* O trabalho consiste em executar o calculo da Fractal de Mandelbro através de ptreads
+* O trabalho consiste em executar o calculo da Fractal de Mandelbrot através de ptreads
 
 * Trabalho relizado na plataforma Windows, utilizando a o package [MinGW da Chocolatey](https://chocolatey.org/packages/mingw)
 
-* O algoritimo irá criar quatro r phtreads para formar a seguinte imagem de Fractal Mandelbrto
+* O algoritimo irá criar quatro phtreads para formar a seguinte imagem de Fractal Mandelbrot
 
 ![alt text](https://raw.githubusercontent.com/augustoaccorsi/fractal-mandelbrot/master/fractal.bmp)
 
