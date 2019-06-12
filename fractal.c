@@ -98,24 +98,52 @@ int main(int argc, char *argv[])
 	//struct bitmap *bm = bitmap_create(image_width, image_height);
 
 	pthread_t up_left_thread, up_right_thread, down_left_thread, down_right_thread;
-	int x = 0, y = 0, z = 0, w = 0;
 
-	//iret1 = pthread_create(&thread1, NULL, print_message_function, (void *)message1);
-
-	struct param_fractal param;
+	struct param_fractal param1, param2, param3, param4;
 	bm = bitmap_create(image_width, image_height);
 
-	param.xmin = (xcenter - scale);
-	param.xmax = (xcenter + scale);
-	param.ymin = (ycenter - scale);
-	param.ymax = (ycenter + scale);
-	param.h_min = 0.5;
-	param.h_max = 1;
-	param.w_min = 0;
-	param.w_max = 0.5;
-	param.max = max;
+	param1.xmin = (xcenter - scale);
+	param1.xmax = (xcenter + scale);
+	param1.ymin = (ycenter - scale);
+	param1.ymax = (ycenter + scale);
+	param1.h_min = 0.5;
+	param1.h_max = 1;
+	param1.w_min = 0;
+	param1.w_max = 0.5;
+	param1.max = max;
 
-	if (pthread_create(&up_left_thread, NULL, compute_image, &param))
+	param2.xmin = (xcenter - scale);
+	param2.xmax = (xcenter + scale);
+	param2.ymin = (ycenter - scale);
+	param2.ymax = (ycenter + scale);
+	param2.h_min = 0.5;
+	param2.h_max = 1;
+	param2.w_min = 0.5;
+	param2.w_max = 1;;
+	param2.max = max;
+
+	param3.xmin = (xcenter - scale);
+	param3.xmax = (xcenter + scale);
+	param3.ymin = (ycenter - scale);
+	param3.ymax = (ycenter + scale);
+	param3.h_min = 0;
+	param3.h_max = 0.5;
+	param3.w_min = 0;
+	param3.w_max = 0.5;;
+	param3.max = max;
+
+	param4.xmin = (xcenter - scale);
+	param4.xmax = (xcenter + scale);
+	param4.ymin = (ycenter - scale);
+	param4.ymax = (ycenter + scale);
+	param4.h_min = 0;
+	param4.h_max = 0.5;
+	param4.w_min = 0.5;
+	param4.w_max = 1;;
+	param4.max = max;
+
+
+	if (pthread_create(&up_left_thread, NULL, compute_image, &param1))
 	{
 		printf("Error creating thread\n");
 		return 1;
@@ -124,34 +152,32 @@ int main(int argc, char *argv[])
 	{
 		printf("Thread 1 up and running\n");
 	}
-	// /
-	// if (pthread_create(&up_right_thread, NULL, compute_image(bm, (xcenter - scale), (xcenter + scale), (ycenter - scale), (ycenter + scale), max, 0.5, 1, 0.5, 1), &y))
-	// {
-	// 	printf("Error creating thread\n");
-	// 	return 1;
-	// }
-	// else
-	// {
-	// 	printf("Thread 2 up and running\n");
-	// }
-	// if (pthread_create(&down_left_thread, NULL, compute_image(bm, (xcenter - scale), (xcenter + scale), (ycenter - scale), (ycenter + scale), max, 1, 0.5, 1, 0.5), &z))
-	// {
-	// 	printf("Error creating thread\n");
-	// 	return 1;
-	// }
-	// else
-	// {
-	// 	printf("Thread 3 up and running\n");
-	// }
-	// if (pthread_create(&down_right_thread, NULL, compute_image(bm, (xcenter - scale), (xcenter + scale), (ycenter - scale), (ycenter + scale), max, 1, 0.5, 0.5, 1), &w))
-	// {
-	// 	printf("Error creating thread\n");
-	// 	return 1;
-	// }
-	// else
-	// {
-	// 	printf("Thread 4 up and running\n");
-	// }
+	if (pthread_create(&up_right_thread, NULL, compute_image, &param2)){
+		printf("Error creating thread\n");
+		return 1;
+	}
+	else
+	{
+		printf("Thread 2 up and running\n");
+	}
+	if (pthread_create(&down_left_thread, NULL, compute_image, &param3))
+	{
+		printf("Error creating thread\n");
+		return 1;
+	}
+	else
+	{
+		printf("Thread 3 up and running\n");
+	}
+	if (pthread_create(&down_right_thread, NULL,  compute_image, &param4))
+	{
+		printf("Error creating thread\n");
+		return 1;
+	}
+	else
+	{
+		printf("Thread 4 up and running\n");
+	}
 
 	printf("\n\n");
 
@@ -164,33 +190,33 @@ int main(int argc, char *argv[])
 	{
 		printf("Thread 1 executed successfully\n");
 	}
-	// if (pthread_join(up_right_thread, NULL))
-	// {
-	// 	printf("Error joining thread\n");
-	// 	return 2;
-	// }
-	// else
-	// {
-	// 	printf("Thread 2 executed successfully\n");
-	// }
-	// if (pthread_join(down_left_thread, NULL))
-	// {
-	// 	printf("Error joining thread\n");
-	// 	return 2;
-	// }
-	// else
-	// {
-	// 	printf("Thread 3 executed successfully\n");
-	// }
-	// if (pthread_join(down_right_thread, NULL))
-	// {
-	// 	printf("Error joining thread\n");
-	// 	return 2;
-	// }
-	// else
-	// {
-	// 	printf("Thread 4 executed successfully\n");
-	// }
+	if (pthread_join(up_right_thread, NULL))
+	{
+		printf("Error joining thread\n");
+		return 2;
+	}
+	else
+	{
+		printf("Thread 2 executed successfully\n");
+	}
+	if (pthread_join(down_left_thread, NULL))
+	{
+		printf("Error joining thread\n");
+		return 2;
+	}
+	else
+	{
+		printf("Thread 3 executed successfully\n");
+	}
+	if (pthread_join(down_right_thread, NULL))
+	{
+		printf("Error joining thread\n");
+		return 2;
+	}
+	else
+	{
+		printf("Thread 4 executed successfully\n");
+	}
 
 	printf("\n\n");
 
@@ -218,12 +244,10 @@ void *compute_image(void *param_thread)
 	struct param_fractal *param = (struct param_fractal *)param_thread;
 
 	int i, j;
-
 	
 	int width = bitmap_width(bm);
 	int height = bitmap_height(bm);
 
-	printf(" W%d H%d ", width, height);
 	// For every pixel in the image...
 	double h_max = param->h_max;
 	double h_min = param->h_min;
@@ -235,21 +259,17 @@ void *compute_image(void *param_thread)
 	double ymin = param->ymin;
 	double max = param->max;
 
-	printf("MAX%f HMIN-%f  HMAX-%f  WMIN-%f aaa WMAX%f  W%F H%f ", max,h_min, h_max, w_min, w_max, width, height);
-
 	for (j = (height * h_min); j < (height * h_max); j++)
 	{
-		//printf("\for j\n");
 		for (i = (width * w_min); i < (width * w_max); i++)
 		{
-			//printf("\for i\n");
 			// Determine the point in x,y space for that pixel.
 			double x = xmin + i * (xmax - xmin) / width;
 			double y = ymin + j * (ymax - ymin) / height;
-			//printf("(%d,%d)", x, y);
+
 			// Compute the iterations at that point.
 			int iters = iterations_at_point(x, y, max);
-			//printf("%d\n", iters);
+
 			// Set the pixel in the bitmap.
 			bitmap_set(bm, i, j, iters);
 		}
