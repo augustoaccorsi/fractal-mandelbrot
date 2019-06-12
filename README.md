@@ -8,7 +8,7 @@
 
 * O algoritimo irá criar quatro phtreads para formar a seguinte imagem de Fractal Mandelbrot
 
-![alt text](https://raw.githubusercontent.com/augustoaccorsi/fractal-mandelbrot/master/fractal.bmp)
+![alt text](https://raw.githubusercontent.com/augustoaccorsi/fractal-mandelbrot/master/fractal-500.bmp)
 
 ### Execução do programa
 
@@ -31,14 +31,15 @@
 
 * Exemplo de execução com os parametros
 
-`fractal -x -0.5 -y 0 -s 2 -m 1000 -W 1000 -H 1000 -o fractal.bmp` 
+`fractal -x -0.5 -y 0 -s 2 -m 1000 -W 1000 -H 1000 -o fractal.bmp`
+`fractal-seq -x -0.5 -y 0 -s 2 -m 500 -W 1000 -H 1000 -o fractal-seq.bmp`
 
 * Medidas
 
 | Resolução  | Sequencial |Paralelizado|
 |--------------------------------------|
-|500x500     | 0.191000s  |  0.907000s |
-|1000x1000   | 0.755000s  | 0.342000s  |
-|5000x5000   | 20.414000s | 8.434000s  |
-|1000x1000   | 75.436000s | 33.926000s |
+|500x500     | 0.106000s  | 0.062000s  |
+|1000x1000   | 0.400000s  | 0.202000s  |
+|5000x5000   | 9.814000s  | 4.623000s  |
+|1000x1000   | 39.104000s | 17.439000s |
 
