@@ -7,101 +7,34 @@
 #include <math.h>
 #include <errno.h>
 #include <string.h>
-#include <complex.h>
 
-/*
-Convert a iteration number to an RGBA color.
-Here, we just scale to gray with a maximum of max.
-You can modify this function to make more interesting colors.
-*/
-
-int value_to_color( double complex z, int iter, int max )
-{
-  int gray = iter * 255 / max;
-  return MAKE_RGBA(gray,gray,gray,0);
-}
-
-/*
-Compute the number of iterations at point x, y
-in the complex space, up to a maximum of max.
-Return the color of the pixel at that point.
-
-This example computes the Newton fractal:
-z = z - alpha * p(z) / p'(z)
-
-Assuming alpha = 1+i and p(z) = z^2 - 1 .
-
-You can modify this function to match your selected fractal computation.
-https://en.wikipedia.org/wiki/Newton_fractal
-*/
-
-static int compute_point( double x, double y, int max )
-{
-	// The initial value of z is given by x and y:
-	double complex z = x + I*y;
-	double complex alpha = 1 + I;
-
-	int iter = 0;
-
-	// Stop if magnitude too large or iterations exceed max
-	while( cabs(z)<4 && iter < max ) {
-
-		// Compute the new value of z from the previous:
-		z = z - alpha*((cpow(z,2) - 1 ) / (2*z));
-		iter++;
-	}
-
-	return value_to_color(z,iter,max);
-}
-
-/*
-Compute an entire image, writing each point to the given bitmap.
-Scale the image to the range (xmin-xmax,ymin-ymax), limiting iterations to "max"
-*/
-
-void compute_image( struct bitmap *bm, double xmin, double xmax, double ymin, double ymax, int max )
-{
-	int i,j;
-
-	int width = bitmap_width(bm);
-	int height = bitmap_height(bm);
-
-	// For every pixel in the image...
-
-	for(j=0;j<height;j++) {
-		for(i=0;i<width;i++) {
-
-			// Determine the point in x,y space for that pixel.
-			double x = xmin + i*(xmax-xmin)/width;
-			double y = ymin + j*(ymax-ymin)/height;
-
-			// Compute the color at that point.
-			int color = compute_point(x,y,max);
-
-			// Set the pixel in the bitmap.
-			bitmap_set(bm,i,j,color);
-		}
-	}
-}
+int iteration_to_color( int i, int max );
+int iterations_at_point( double x, double y, int max );
+void compute_image( struct bitmap *bm, double xmin, double xmax, double ymin, double ymax, int max );
 
 void show_help()
 {
 	printf("Use: fractal [options]\n");
 	printf("Where options are:\n");
-	printf("-m <max>    The maximum number of iterations per point. (default=100)\n");
-	printf("-x <coord>  X coordinate of image center point. (default=0)\n");
-	printf("-y <coord>  Y coordinate of image center point. (default=0)\n");
-	printf("-s <scale>  Scale of the image in complex coordinates. (default=4)\n");
-	printf("-W <pixels> Width of the image in pixels. (default=640)\n");
-	printf("-H <pixels> Height of the image in pixels. (default=480)\n");
-	printf("-o <file>   Set output file. (default=fractal.bmp)\n");
-	printf("-h          Show this help text.\n");
+	printf("-m <max>     The maximum number of iterations per point. (default=1000)\n");
+	printf("-x <coord>   X coordinate of image center point. (default=0)\n");
+	printf("-y <coord>   Y coordinate of image center point. (default=0)\n");
+	printf("-s <scale>   Scale of the image in Mandlebrot coordinates. (default=4)\n");
+	printf("-W <pixels>  Width of the image in pixels. (default=500)\n");
+	printf("-H <pixels>  Height of the image in pixels. (default=500)\n");
+	printf("-n <threads> Number of threads that will be used to create the Mandelbrot\n");
+    printf("-o <file>    Set output file. (default=fractal.bmp)\n");
+	printf("-h           Show this help text.\n");
+	printf("\nSome examples are:\n");
+	printf("fractal -x -0.5 -y -0.5 -s 0.2\n");
+	printf("fractal -x -.38 -y -.665 -s .05 -m 100\n");
+	printf("fractal -x 0.286932 -y 0.014287 -s .0005 -m 1000\n\n");
 }
 
 int main( int argc, char *argv[] )
 {
 	char c;
-
+    int number_of_threads = 1;
 	// These are the default configuration values used
 	// if no command line arguments are given.
 
@@ -109,14 +42,14 @@ int main( int argc, char *argv[] )
 	double xcenter = 0;
 	double ycenter = 0;
 	double scale = 4;
-	int    image_width = 640;
-	int    image_height = 480;
-	int    max = 100;
+	int    image_width = 500;
+	int    image_height = 500;
+	int    max = 1000;
 
 	// For each command line argument given,
 	// override the appropriate configuration value.
 
-	while((c = getopt(argc,argv,"x:y:s:W:H:m:o:h"))!=-1) {
+	while((c = getopt(argc,argv,"x:y:s:W:H:m:n:o:h"))!=-1) {
 		switch(c) {
 			case 'x':
 				xcenter = atof(optarg);
@@ -135,6 +68,9 @@ int main( int argc, char *argv[] )
 				break;
 			case 'm':
 				max = atoi(optarg);
+				break;
+			case 'n':
+				number_of_threads = atoi(optarg);
 				break;
 			case 'o':
 				outfile = optarg;
@@ -155,7 +91,7 @@ int main( int argc, char *argv[] )
 	// Fill it with a dark blue, for debugging
 	bitmap_reset(bm,MAKE_RGBA(0,0,255,0));
 
-	// Compute the fractal image
+	// Compute the fractalbrot image
 	compute_image(bm,xcenter-scale,xcenter+scale,ycenter-scale,ycenter+scale,max);
 
 	// Save the image in the stated file.
@@ -166,3 +102,75 @@ int main( int argc, char *argv[] )
 
 	return 0;
 }
+
+/*
+Compute an entire fractalbrot image, writing each point to the given bitmap.
+Scale the image to the range (xmin-xmax,ymin-ymax), limiting iterations to "max"
+*/
+
+void compute_image( struct bitmap *bm, double xmin, double xmax, double ymin, double ymax, int max )
+{
+	int i,j;
+
+	int width = bitmap_width(bm);
+	int height = bitmap_height(bm);
+
+	// For every pixel in the image...
+
+	for(j=0;j<height;j++) {
+
+		for(i=0;i<width;i++) {
+
+			// Determine the point in x,y space for that pixel.
+			double x = xmin + i*(xmax-xmin)/width;
+			double y = ymin + j*(ymax-ymin)/height;
+
+			// Compute the iterations at that point.
+			int iters = iterations_at_point(x,y,max);
+
+			// Set the pixel in the bitmap.
+			bitmap_set(bm,i,j,iters);
+		}
+	}
+}
+
+/*
+Return the number of iterations at point x, y
+in the fractalbrot space, up to a maximum of max.
+*/
+
+int iterations_at_point( double x, double y, int max )
+{
+	double x0 = x;
+	double y0 = y;
+
+	int iter = 0;
+
+	while( (x*x + y*y <= 4) && iter < max ) {
+
+		double xt = x*x - y*y + x0;
+		double yt = 2*x*y + y0;
+
+		x = xt;
+		y = yt;
+
+		iter++;
+	}
+
+	return iteration_to_color(iter,max);
+}
+
+/*
+Convert a iteration number to an RGBA color.
+Here, we just scale to gray with a maximum of imax.
+Modify this function to make more interesting colors.
+*/
+
+int iteration_to_color( int i, int max )
+{
+	int gray = 255*i/max;
+	return MAKE_RGBA(gray,gray,gray,0);
+}
+
+
+
