@@ -1,4 +1,3 @@
-// fractal -x -0.5 -y 0 -s 2 -m 1000 -W 1000 -H 1000
 #include "bitmap.h"
 
 #include <getopt.h>
@@ -11,24 +10,18 @@
 
 int iteration_to_color(int i, int max);
 int iterations_at_point(double x, double y, int max);
-//void *compute_image(struct bitmap *bm, double xmin, double xmax, double ymin, double ymax, int max, double height_min_divider, double height_max_divider, double width_min_divider, double width_max_divider);
 void *compute_image(void *param_thread);
 void show_help()
-{
-	printf("Use: fractal [options]\n");
-	printf("Where options are:\n");
-	printf("-m <max>     The maximum number of iterations per point. (default=1000)\n");
-	printf("-x <coord>   X coordinate of image center point. (default=0)\n");
-	printf("-y <coord>   Y coordinate of image center point. (default=0)\n");
-	printf("-s <scale>   Scale of the image in Mandlebrot coordinates. (default=4)\n");
-	printf("-W <pixels>  Width of the image in pixels. (default=500)\n");
-	printf("-H <pixels>  Height of the image in pixels. (default=500)\n");
-	printf("-o <file>    Set output file. (default=fractal.bmp)\n");
-	printf("-h           Show this help text.\n");
-	printf("\nSome examples are:\n");
-	printf("fractal -x -0.5 -y -0.5 -s 0.2\n");
-	printf("fractal -x -.38 -y -.665 -s .05 -m 100\n");
-	printf("fractal -x 0.286932 -y 0.014287 -s .0005 -m 1000\n\n");
+{	printf("-m Número máximo de iterações por ponto (default=1000)\n");
+	printf("-x Coordenada X do centro da imagem (default=0)\n");
+	printf("-x Coordenada y do centro da imagem (default=0)\n");
+	printf("-s Escala da imagem (default=4)\n");
+	printf("-W Largura da imagem em pixels (default=500)\n");
+	printf("-H Alura da imagem em pixels (default=500)\n");
+	printf("-o Arquivo de saída (default=fractal.bmp)\n");
+	printf("-h Ajuda\n");
+	printf("\nExemplo:\n");	
+	printf("fractal -x -0.5 -y 0 -s 2 -m 1000 -W 1000 -H 1000 -o fractal.bmp");
 }
 struct bitmap *bm;
 
@@ -49,8 +42,6 @@ struct param_fractal
 int main(int argc, char *argv[])
 {
 	char c;
-	// These are the default configuration values used
-	// if no command line arguments are given.
 
 	const char *outfile = "fractal.bmp";
 	double xcenter = 0;
@@ -59,9 +50,6 @@ int main(int argc, char *argv[])
 	int image_width = 500;
 	int image_height = 500;
 	int max = 1000;
-
-	// For each command line argument given,
-	// override the appropriate configuration value.
 
 	while ((c = getopt(argc, argv, "x:y:s:W:H:m:n:o:h")) != -1)
 	{
@@ -94,9 +82,6 @@ int main(int argc, char *argv[])
 			break;
 		}
 	}
-
-	//struct bitmap *bm = bitmap_create(image_width, image_height);
-
 	pthread_t up_left_thread, up_right_thread, down_left_thread, down_right_thread;
 
 	struct param_fractal param1, param2, param3, param4;
@@ -179,7 +164,7 @@ int main(int argc, char *argv[])
 		printf("Thread 4 up and running\n");
 	}
 
-	printf("\n\n");
+	printf("\n");
 
 	if (pthread_join(up_left_thread, NULL))
 	{
@@ -218,7 +203,7 @@ int main(int argc, char *argv[])
 		printf("Thread 4 executed successfully\n");
 	}
 
-	printf("\n\n");
+	printf("\n");
 
 	if (!bitmap_save(bm, outfile))
 	{
@@ -233,12 +218,6 @@ int main(int argc, char *argv[])
 	return 0;
 }
 
-/*
-Compute an entire fractalbrot image, writing each point to the given bitmap.
-Scale the image to the range (xmin-xmax,ymin-ymax), limiting iterations to "max"
-*/
-
-//void *compute_image(struct bitmap *bm, double xmin, double xmax, double ymin, double ymax, int max, double height_min_divider, double height_max_divider, double width_min_divider, double width_max_divider)
 void *compute_image(void *param_thread)
 {
 	struct param_fractal *param = (struct param_fractal *)param_thread;
@@ -248,7 +227,6 @@ void *compute_image(void *param_thread)
 	int width = bitmap_width(bm);
 	int height = bitmap_height(bm);
 
-	// For every pixel in the image...
 	double h_max = param->h_max;
 	double h_min = param->h_min;
 	double w_max = param->w_max;
@@ -263,23 +241,15 @@ void *compute_image(void *param_thread)
 	{
 		for (i = (width * w_min); i < (width * w_max); i++)
 		{
-			// Determine the point in x,y space for that pixel.
 			double x = xmin + i * (xmax - xmin) / width;
 			double y = ymin + j * (ymax - ymin) / height;
 
-			// Compute the iterations at that point.
 			int iters = iterations_at_point(x, y, max);
-
-			// Set the pixel in the bitmap.
+			
 			bitmap_set(bm, i, j, iters);
 		}
 	}
 }
-
-/*
-Return the number of iterations at point x, y
-in the fractalbrot space, up to a maximum of max.
-*/
 
 int iterations_at_point(double x, double y, int max)
 {
@@ -302,12 +272,6 @@ int iterations_at_point(double x, double y, int max)
 
 	return iteration_to_color(iter, max);
 }
-
-/*
-Convert a iteration number to an RGBA color.
-Here, we just scale to gray with a maximum of imax.
-Modify this function to make more interesting colors.
-*/
 
 int iteration_to_color(int i, int max)
 {
