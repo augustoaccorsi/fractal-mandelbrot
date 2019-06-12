@@ -13,7 +13,8 @@
 ### Execução do programa
 
 `make`
-`fractal`
+`fractal` para executar paraleluzado
+`fractal-seq` para executar sequencial
 
 * É possível enviar parametros para que tenhamos uma Fractal de Mandelbrot melhor
 
@@ -32,4 +33,12 @@
 
 `fractal -x -0.5 -y 0 -s 2 -m 1000 -W 1000 -H 1000 -o fractal.bmp` 
 
+* Medidas
+
+| Resolução  | Sequencial |Paralelizado|
+|--------------------------------------|
+|500x500     | 0.191000s  |  0.907000s |
+|1000x1000   | 0.755000s  | 0.342000s  |
+|5000x5000   | 20.414000s | 8.434000s  |
+|1000x1000   | 75.436000s | 33.926000s |
 
