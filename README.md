@@ -14,7 +14,7 @@
 
 `make`
 
-`fractal` para executar paraleluzado
+`fractal` para executar paralelizado, utilizando pthreads
 
 `fractal-seq` para executar sequencial
 
