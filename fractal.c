@@ -11,9 +11,7 @@
 
 int iteration_to_color(int i, int max);
 int iterations_at_point(double x, double y, int max);
-void compute_image(struct bitmap *bm, double xmin, double xmax, double ymin, double ymax, int max, double width_max_divider, double width_min_divider, double height_max_divider, double height_min_divider);
-void *execute_ptreads(int image_width, int image_height 	, double xmin, double xmax, double ymin, double ymax, int max, double xcenter, double ycenter, double scale);
-
+void *compute_image(struct bitmap *bm, double xmin, double xmax, double ymin, double ymax, int max, double height_min_divider, double height_max_divider, double width_min_divider, double width_max_divider);
 
 void show_help()
 {
@@ -25,7 +23,6 @@ void show_help()
 	printf("-s <scale>   Scale of the image in Mandlebrot coordinates. (default=4)\n");
 	printf("-W <pixels>  Width of the image in pixels. (default=500)\n");
 	printf("-H <pixels>  Height of the image in pixels. (default=500)\n");
-	printf("-n <threads> Number of threads that will be used to create the Mandelbrot\n");
 	printf("-o <file>    Set output file. (default=fractal.bmp)\n");
 	printf("-h           Show this help text.\n");
 	printf("\nSome examples are:\n");
@@ -37,7 +34,6 @@ void show_help()
 int main(int argc, char *argv[])
 {
 	char c;
-	int number_of_threads = 1;
 	// These are the default configuration values used
 	// if no command line arguments are given.
 
@@ -74,9 +70,6 @@ int main(int argc, char *argv[])
 		case 'm':
 			max = atoi(optarg);
 			break;
-		case 'n':
-			number_of_threads = atoi(optarg);
-			break;
 		case 'o':
 			outfile = optarg;
 			break;
@@ -87,50 +80,98 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	// Display the configuration of the image.
-	//printf("fractal: x=%lf y=%lf scale=%lf max=%d outfile=%s\n",xcenter,ycenter,scale,max,outfile);
-	int aux = image_height;
-	int value = aux / number_of_threads;
+	struct bitmap *bm = bitmap_create(image_width, image_height);
 
-	for (int i = 0; i < number_of_threads; i++)
+	pthread_t up_left_thread, up_right_thread, down_left_thread, down_right_thread;
+	int x = 0, y = 0, z = 0, w = 0;
+
+	if (pthread_create(&up_left_thread, NULL, compute_image(bm, (xcenter - scale), (xcenter + scale), (ycenter - scale), (ycenter + scale), max, 0.5, 1, 1, 0.5), &x))
 	{
-		aux = aux - value;
-		if (aux < value)
-			value = aux + value;
-
-		printf("\nphtread-%d valor:%d", i + 1, value);
-
-		/* create a second thread which executes inc_x(&x) */
-	}
-
-	pthread_t inc_x_thread;
-	int x=0;
-
-	if (pthread_create(&inc_x_thread, NULL, execute_ptreads(image_width, image_height, (xcenter - scale), (xcenter + scale), (ycenter - scale), (ycenter + scale), max, xcenter, ycenter, scale), &x))
-	{
-		fprintf(stderr, "Error creating thread\n");
+		printf("Error creating thread\n");
 		return 1;
 	}
-
-	if (pthread_join(inc_x_thread, NULL))
+	else
 	{
-
-		fprintf(stderr, "Error joining thread\n");
-		return 2;
+		printf("Thread 1 up and running\n");
+	}
+	if (pthread_create(&up_right_thread, NULL, compute_image(bm, (xcenter - scale), (xcenter + scale), (ycenter - scale), (ycenter + scale), max, 0.5, 1, 0.5, 1), &y))
+	{
+		printf("Error creating thread\n");
+		return 1;
+	}
+	else
+	{
+		printf("Thread 2 up and running\n");
+	}
+	if (pthread_create(&down_left_thread, NULL, compute_image(bm, (xcenter - scale), (xcenter + scale), (ycenter - scale), (ycenter + scale), max, 1, 0.5, 1, 0.5), &z))
+	{
+		printf("Error creating thread\n");
+		return 1;
+	}
+	else
+	{
+		printf("Thread 3 up and running\n");
+	}
+	if (pthread_create(&down_right_thread, NULL, compute_image(bm, (xcenter - scale), (xcenter + scale), (ycenter - scale), (ycenter + scale), max, 1, 0.5, 0.5, 1), &w))
+	{
+		printf("Error creating thread\n");
+		return 1;
+	}
+	else
+	{
+		printf("Thread 4 up and running\n");
 	}
 
-	//execute_ptreads(number_of_threads, image_height, image_width);
+	printf("\n\n");
 
-	// Create a bitmap of the appropriate size.
-	//bitmap *bm = bitmap_create(image_width, image_height);
+	if (pthread_join(up_left_thread, NULL))
+	{
+		printf("Error joining thread\n");
+		return 2;
+	}
+	else
+	{
+		printf("Thread 1 executed successfully\n");
+	}
+	if (pthread_join(up_right_thread, NULL))
+	{
+		printf("Error joining thread\n");
+		return 2;
+	}
+	else
+	{
+		printf("Thread 2 executed successfully\n");
+	}
+	if (pthread_join(down_left_thread, NULL))
+	{
+		printf("Error joining thread\n");
+		return 2;
+	}
+	else
+	{
+		printf("Thread 3 executed successfully\n");
+	}
+	if (pthread_join(down_right_thread, NULL))
+	{
+		printf("Error joining thread\n");
+		return 2;
+	}
+	else
+	{
+		printf("Thread 4 executed successfully\n");
+	}
 
-	// Fill it with a dark blue, for debugging
-	//bitmap_reset(bm, MAKE_RGBA(0, 0, 255, 0));
+	printf("\n\n");
 
-	// Compute the fractalbrot image
-	//compute_image(bm, xcenter - scale, xcenter + scale, ycenter - scale, ycenter + scale, max);
-
-	// Save the image in the stated file.
+	if (!bitmap_save(bm, outfile))
+	{
+		printf("fractal: couldn't write to %s\n", outfile);
+		return 1;
+	}
+	else
+	{
+		printf("Fractal Mandelbrot bitmap created as %s", outfile);
+	}
 
 	return 0;
 }
@@ -140,9 +181,8 @@ Compute an entire fractalbrot image, writing each point to the given bitmap.
 Scale the image to the range (xmin-xmax,ymin-ymax), limiting iterations to "max"
 */
 
-void compute_image(struct bitmap *bm, double xmin, double xmax, double ymin, double ymax, int max, double width_max_divider, double width_min_divider, double height_max_divider, double height_min_divider)
+void *compute_image(struct bitmap *bm, double xmin, double xmax, double ymin, double ymax, int max, double height_min_divider, double height_max_divider, double width_min_divider, double width_max_divider)
 {
-	printf("\n(%f - %f)\n(%f - %f)", xmin, xmax, ymin, ymax);
 	int i, j;
 
 	int width = bitmap_width(bm);
@@ -150,10 +190,10 @@ void compute_image(struct bitmap *bm, double xmin, double xmax, double ymin, dou
 
 	// For every pixel in the image...
 
-	for (j = height/2; j < height; j++)
+	for (j = (height * height_min_divider); j < (height * height_max_divider); j++)
 	{
 
-		for (i = width/2; i < width; i++)
+		for (i = (width * width_min_divider); i < (width * width_max_divider); i++)
 		{
 
 			// Determine the point in x,y space for that pixel.
@@ -206,25 +246,4 @@ int iteration_to_color(int i, int max)
 {
 	int gray = 255 * i / max;
 	return MAKE_RGBA(gray, gray, gray, 0);
-}
-
-void *execute_ptreads(int image_width, int image_height, double xmin, double xmax, double ymin, double ymax, int max, double xcenter, double ycenter, double scale)
-{
-	struct bitmap *bm = bitmap_create(image_width, image_height);
-
-	// Fill it with a dark blue, for debugging
-	//bitmap_reset(bm, MAKE_RGBA(0, 0, 255, 0));
-
-	// Compute the fractalbrot image
-	
-	//                       xmin               xmax                  ymin               ymax
-	compute_image(bm, (xcenter - scale), (xcenter + scale), (ycenter - scale), (ycenter + scale), max, 0, 0, 0, 0);
-
-	const char *outfile = "fractal.bmp";
-	
-	if (!bitmap_save(bm, outfile))
-	{
-		fprintf(stderr, "fractal: couldn't write to %s: %s\n", outfile, strerror(errno));
-		return 1;
-	}
 }
