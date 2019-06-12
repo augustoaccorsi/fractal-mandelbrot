@@ -1,14 +1,14 @@
 
-all: mandel
+all: fractal
 
-mandel: mandel.o bitmap.o
-	gcc mandel.o bitmap.o -o mandel -lpthread
+fractal: fractal.o bitmap.o
+	gcc fractal.o bitmap.o -o fractal -lpthread -lm
 
-mandel.o: mandel.c
-	gcc -Wall -g -c mandel.c -o mandel.o
+fractal.o: fractal.c
+	gcc --std=c99 -Wall -g -c fractal.c -o fractal.o
 
 bitmap.o: bitmap.c
-	gcc -Wall -g -c bitmap.c -o bitmap.o
+	gcc --std=c99 -Wall -g -c bitmap.c -o bitmap.o
 
 clean:
-	rm -f mandel.o bitmap.o mandel
+	rm -f fractal.o bitmap.o fractal
