@@ -45,3 +45,5 @@
 | 1000x1000 | 0.400000s | 0.202000s |
 | 5000x5000 | 9.814000s | 4.623000s |
 | 1000x1000 | 39.104000s | 17.439000s |
+
+Projeto base: [CSE 30341 - Operating System Principles - Spring 2018](https://www3.nd.edu/~dthain/courses/cse30341/spring2018/project3/)
